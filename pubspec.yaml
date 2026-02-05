@@ -13,6 +13,11 @@ dependencies:
   audioplayers: ^6.0.0
   vibration: ^2.0.0
   cupertino_icons: ^1.0.6
+  noise_meter: ^5.0.0
+  permission_handler: ^11.3.0
+  avatar_glow: ^3.0.1
+  slide_to_act: ^2.0.2
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
