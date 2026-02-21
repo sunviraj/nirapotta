@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 import 'package:slide_to_act/slide_to_act.dart';
+import 'widgets/glass_container.dart';
 
 class AlertScreen extends StatefulWidget {
   final String triggerReason; // Added parameter
@@ -76,105 +77,115 @@ class _AlertScreenState extends State<AlertScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.red,
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              size: 100,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'EMERGENCY ALERT!',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF8B0000), // Dark Red
+              Color(0xFF1E1E1E), // Dark Grey
+              Color(0xFF2D1B2E), // Deep muted ruby
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                size: 100,
                 color: Colors.white,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            // Display dynamic Trigger Reason
-            Text(
-              widget.triggerReason,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.yellowAccent,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Sending simulated alert...',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 50),
-            // Mock Emergency Options
-            _buildMockOption(Icons.local_police, 'Call Police (Mock)'),
-            _buildMockOption(Icons.local_hospital, 'Call Ambulance (Mock)'),
-            _buildMockOption(Icons.message, 'Text Contacts (Mock)'),
-            const Spacer(),
-            // Slide to Stop (Modern Safety Feature)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: SlideAction(
-                borderRadius: 30,
-                elevation: 0,
-                innerColor: Colors.red,
-                outerColor: Colors.white,
-                sliderButtonIcon: const Icon(
-                  Icons.arrow_forward_ios_rounded,
+              const SizedBox(height: 20),
+              const Text(
+                'EMERGENCY ALERT!',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-                text: 'SLIDE TO DISABLE',
-                textStyle: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-                onSubmit: () async {
-                  await _stopAlarm();
-                  return null; // Reset slider? No, we pop.
-                },
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              // Display dynamic Trigger Reason
+              Text(
+                widget.triggerReason,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.yellowAccent,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Sending simulated alert...',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 50),
+              // Mock Emergency Options
+              _buildMockOption(Icons.local_police, 'Call Police (Mock)'),
+              _buildMockOption(Icons.local_hospital, 'Call Ambulance (Mock)'),
+              _buildMockOption(Icons.message, 'Text Contacts (Mock)'),
+              const Spacer(),
+              // Slide to Stop (Modern Safety Feature)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: SlideAction(
+                  borderRadius: 30,
+                  elevation: 0,
+                  innerColor: Colors.red,
+                  outerColor: Colors.white,
+                  sliderButtonIcon: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.white,
+                  ),
+                  text: 'SLIDE TO DISABLE',
+                  textStyle: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                  onSubmit: () async {
+                    await _stopAlarm();
+                    return null; // Reset slider? No, we pop.
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildMockOption(IconData icon, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 20),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-              ),
+    return GlassContainer(
+      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+      padding: const EdgeInsets.all(15),
+      opacity: 0.1,
+      border: Border.all(color: Colors.white24),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(width: 20),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

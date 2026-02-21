@@ -16,6 +16,7 @@ class SoundService {
   NoiseMeter? _noiseMeter;
   StreamSubscription<NoiseReading>? _noiseSubscription;
   bool _isListening = false;
+  int _listenStartTime = 0; // Timestamp when listening started
 
   /// Debounce to prevent multiple triggers
   int _lastTriggerTimestamp = 0;
@@ -47,13 +48,18 @@ class SoundService {
         },
       );
       _isListening = true;
+      _listenStartTime =
+          DateTime.now().millisecondsSinceEpoch; // Record start time for warmup
     } catch (e) {
       debugPrint('Error starting NoiseMeter: $e');
     }
   }
 
   void _analyzeSound(NoiseReading reading) {
-    // reading.meanDecibel, reading.maxDecibel
+    int now = DateTime.now().millisecondsSinceEpoch;
+
+    // Ignore sound spikes during the first 1 second of initialization (Warm-up period)
+    if (now - _listenStartTime < 1000) return;
 
     // Log to "Brain Memory"
     SensorDataRepository().addReading(SensorReading(
