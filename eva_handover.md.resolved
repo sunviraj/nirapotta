@@ -1,0 +1,31 @@
+# Project Nirapotta V3: Handover for Eva
+
+## 1. Current Project Status (Everything is Fine!)
+The App is stable and the data collection phase is **100% complete**.
+- **Sensors**: Both the Accelerometer and Microphone are actively listening and successfully detecting spikes (Shake, Impact, Loud Noise).
+- **Data Pipeline**: The [SensorDataRepository](file:///c:/Users/User/.gemini/antigravity/scratch/shake_alert_app/lib/data/sensor_repository.dart#9-110) is flawlessly combining the motion and sound data into unified CSV matrices using a Zero-Order Hold algorithm.
+- **Evidence**: The app automatically captures silent background photos during Major Alerts.
+- **UI & Flow**: The entire Onboarding flow, Hardware Calibration, and Dashboard have been successfully designed with a modern Glassmorphism aesthetic.
+- **Labeling**: The CSV datasets are automatically labeled based on the trigger context (e.g., `IMPACT_DETECTED` vs. `LOUD_NOISE`).
+
+## 2. Your Datasets
+The user has successfully collected the necessary datasets for the AI model. Because of the automated labeling implemented in Phase 5, the CSV files provided to you are already categorized. 
+
+## 3. Your Tasks (What to do Next)
+
+### Task A: Machine Learning / Model Training (Primary)
+Now that you have the raw CSV datasets, your first objective is to train the AI model.
+1. **Upload**: Import the provided CSV datasets into the training platform (e.g., Edge Impulse).
+2. **Train**: Use the generated groups (`IMPACT`, `LOUD_NOISE`, `SHAKE`) to train a classification model that can accurately distinguish between a real emergency and regular phone movements.
+3. **Export**: Once the model is trained and verified, export the TensorFlow/TFLite model so it can be integrated back into our Flutter app later.
+
+### Task B: The Alert Decision System (The Logic Gate)
+Currently, the app triggers alerts based on simple hard thresholds. You need to implement the complex decision matrix that categorizes these incidents.
+- Define what constitutes a **Minor Alert** vs a **Major Alert** based on the model's output or combined sensor logic.
+    - *Example*: `Minor Shake` = Local Notification.
+    - *Example*: `Minor Shake` followed by `Loud Noise` within 5 seconds = Escalate immediately to `Major Alert`.
+
+### Task C: Repository Management (Git Master)
+- You act as the gatekeeper for the [main](file:///c:/Users/User/.gemini/antigravity/scratch/shake_alert_app/test/widget_test.dart#13-31) branch.
+- Shortly, **Sifat** will be completing the GPS Location Tracking and SMS/Call emergency dispatch modules. 
+- It is your responsibility to review Sifat's code, ensure it integrates perfectly with your "Logic Gate", and safely merge it into the main repository.
