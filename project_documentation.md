@@ -12,6 +12,7 @@ Project Nirapotta is an intelligent, multi-tier personal safety application. It 
     *   *Impact/Fall*: Sudden, high G-force spike > 45.0 $m/s^2$ (e.g., dropping or falling).
 *   **User Interface (`main.dart`, `alert_screen.dart`)**: Designed the modern "Dark/Red" aesthetics. Added the pulsing shield animation to indicate active monitoring, and implemented the **"Slide to Cancel"** mechanism to prevent the user from accidentally dismissing a real emergency alert due to panic.
 *   **AI Data Structure (`sensor_repository.dart`)**: Built the core "Brain Memory" using a 10-second Circular Buffer.
+*   **Repo Maintenance**: Act as the Git Master, managing branches and merging Sifat's upcoming communication code into the stable `main` branch.
 
 ### 2. Adnan: Dual Tier & Sound Analysis
 **Focus**: *Acoustic Verification.*
@@ -32,7 +33,6 @@ Project Nirapotta is an intelligent, multi-tier personal safety application. It 
 *   **Current State**: The app currently triggers alerts independently (e.g., a loud sound triggers an alert, or a shake triggers an alert).
 *   **Eva's Task (The Logic Gate)**: She will implement the complex decision matrix that categorizes incidents into **Minor** or **Major**.
     *   *Example Logic*: IF `Minor Shake` is detected -> Notify user on screen. IF `Minor Shake` + `Loud Noise` (within 5 seconds) -> Escalate to `Major Alert`.
-*   **Repo Maintenance**: Eva will continue to act as the Git Master, managing branches and merging Sifat's upcoming communication code into the `main` stable branch.
 
 ### 5. Sifat: GPS & Telemetry Communication
 **Focus**: *Response capabilities and Location tracking.*
