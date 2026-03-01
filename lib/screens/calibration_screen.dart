@@ -5,8 +5,8 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:noise_meter/noise_meter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart'; // To navigate to HomePage
 import '../widgets/glass_container.dart';
+import 'pin_setup_screen.dart'; // Imported for Onboarding Next Step
 
 class CalibrationScreen extends StatefulWidget {
   final bool isOnboarding;
@@ -104,10 +104,10 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     await prefs.setDouble('sound_sensitivity', soundLimit);
 
     if (widget.isOnboarding) {
-      await prefs.setBool('has_onboarded', true);
+      // Don't set has_onboarded yet, wait until PIN setup completes
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => const PinSetupScreen()),
       );
     } else {
       if (!mounted) return;

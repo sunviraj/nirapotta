@@ -4,6 +4,9 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart'; // To navigate to HomePage
 import 'disclaimer_screen.dart';
+import 'pin_setup_screen.dart'; // To navigate to PIN setup
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -37,13 +40,32 @@ class _SplashScreenState extends State<SplashScreen>
 
     final prefs = await SharedPreferences.getInstance();
     final bool hasOnboarded = prefs.getBool('has_onboarded') ?? false;
+    final bool hasPin = prefs.getString('gallery_pin') != null;
 
     // Check mounted again after the async getBool call
     if (!mounted) return;
 
-    if (hasOnboarded) {
+    // Check Firebase Auth
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Auth check failed: $e');
+    }
+
+    if (hasOnboarded && hasPin) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } else if (hasOnboarded && !hasPin) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (_) => const PinSetupScreen(isFromUpdate: true)),
       );
     } else {
       Navigator.of(context).pushReplacement(

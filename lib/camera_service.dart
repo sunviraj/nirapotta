@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
-import 'package:gal/gal.dart'; // Using gal for gallery saving
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class CameraService {
   // Singleton pattern
@@ -12,10 +12,15 @@ class CameraService {
 
   CameraController? _controller;
   bool _isInitialized = false;
+  bool _isRecordingVideo = false;
 
-  /// Initializes the camera in the background.
+  CameraController? get controller => _controller;
+  bool get isRecordingVideo => _isRecordingVideo;
+  bool get isInitialized => _isInitialized;
+
+  /// Initializes the camera.
   /// Should be called when the app starts.
-  Future<void> initialize() async {
+  Future<void> initialize({bool enableAudio = true}) async {
     if (_isInitialized) return;
 
     try {
@@ -31,11 +36,13 @@ class CameraService {
       _controller = CameraController(
         firstCamera,
         ResolutionPreset.medium, // Medium resolution is enough for evidence
-        enableAudio: false, // No audio needed for photo
+        enableAudio: enableAudio, // Changed to support video recording
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _controller!.initialize();
+      // Ensure flash is NEVER used for background capturing
+      await _controller!.setFlashMode(FlashMode.off);
       _isInitialized = true;
       debugPrint('Camera initialized');
     } catch (e) {
@@ -64,18 +71,18 @@ class CameraService {
 
       final XFile image = await _controller!.takePicture();
 
-      // Rename the file to include the reason
+      // Move to secure evidence directory
+      final Directory extDir = await getApplicationDocumentsDirectory();
+      final String dirPath = '${extDir.path}/evidence';
+      await Directory(dirPath).create(recursive: true);
+
       final String timestamp =
           DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final String safeReason = reason.replaceAll(' ', '_').toUpperCase();
-      final String dir = File(image.path).parent.path;
-      final String newPath = '$dir/${safeReason}_$timestamp.jpg';
+      final String newPath = '$dirPath/IMAGE_$timestamp.jpg';
 
       await File(image.path).rename(newPath);
 
-      // Move to permanent storage (Gallery) using the gal package
-      await Gal.putImage(newPath, album: 'Nirapotta');
-      debugPrint('Evidence photo saved to Gallery: $newPath');
+      debugPrint('Evidence photo saved to Secure Directory: $newPath');
 
       // Dispose camera after taking photo to fulfill requirement (inactive by default)
       dispose();
@@ -88,9 +95,63 @@ class CameraService {
     }
   }
 
+  Future<void> startVideoRecording() async {
+    if (!_isInitialized ||
+        _controller == null ||
+        !_controller!.value.isInitialized) {
+      await initialize(enableAudio: true);
+      // Small delay to allow camera sensor to initialize
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!_isInitialized) return;
+    }
+
+    if (_controller!.value.isRecordingVideo) {
+      debugPrint('Camera is already recording video');
+      return;
+    }
+
+    try {
+      await _controller!.startVideoRecording();
+      _isRecordingVideo = true;
+      debugPrint('Started background video recording');
+    } catch (e) {
+      debugPrint('Error starting video recording: $e');
+    }
+  }
+
+  Future<String?> stopVideoRecording() async {
+    if (_controller == null || !_controller!.value.isRecordingVideo) {
+      return null;
+    }
+
+    try {
+      final XFile video = await _controller!.stopVideoRecording();
+      _isRecordingVideo = false;
+
+      // Move to secure evidence directory
+      final Directory extDir = await getApplicationDocumentsDirectory();
+      final String dirPath = '${extDir.path}/evidence';
+      await Directory(dirPath).create(recursive: true);
+
+      final String timestamp =
+          DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final String newPath = '$dirPath/VIDEO_$timestamp.mp4';
+
+      await File(video.path).rename(newPath);
+      debugPrint('Video evidence saved to Secure Directory: $newPath');
+      dispose();
+      return newPath;
+    } catch (e) {
+      debugPrint('Error stopping video recording: $e');
+      dispose();
+      return null;
+    }
+  }
+
   /// Disposes the camera controller.
   void dispose() {
     _controller?.dispose();
     _isInitialized = false;
+    _isRecordingVideo = false;
   }
 }

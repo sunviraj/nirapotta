@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Additional ignores
+android/build/
+android/app/google-services.json
+implementation_plan*.md

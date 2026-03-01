@@ -11,9 +11,24 @@ import 'alert_screen.dart';
 import 'screens/log_viewer_screen.dart';
 import 'screens/calibration_screen.dart';
 import 'screens/splash_screen.dart'; // Added for Onboarding
+import 'package:firebase_core/firebase_core.dart'; // Added for Firebase Auth
+import 'screens/secure_gallery_auth_screen.dart'; // Secure Gallery
 import 'widgets/glass_container.dart'; // Added for Glassmorphism
+import 'hardware_button_service.dart';
+import 'action_dispatcher.dart';
+import 'screens/emergency_contacts_screen.dart';
+import 'screens/trigger_customization_screen.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint(
+        'Warning: Firebase could not be initialized ($e). Did you forget google-services.json?');
+  }
   runApp(const ShakeAlertApp());
 }
 
@@ -23,6 +38,7 @@ class ShakeAlertApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Nirapotta ',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -62,6 +78,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadCustomPreferences();
+
+    HardwareButtonService().initialize();
 
     _gestureService = GestureService(
       onGestureDetected: _onGestureDetected,
@@ -109,7 +127,15 @@ class _HomePageState extends State<HomePage> {
     // Store reason for CSV filename
     SensorDataRepository().lastTriggerReason = reason;
 
-    // EVIDENCE CAPTURE (Saiful)
+    // Dispatch customizable actions (SMS, Audio, Video) based on trigger
+    String triggerKey = 'shake';
+    if (reason.contains("LOUD NOISE")) {
+      triggerKey = 'loud_noise';
+    }
+    // Wait intentionally not awaiting here so Alert screen pops instantly
+    EmergencyActionDispatcher.dispatch(triggerKey, reason);
+
+    // EVIDENCE CAPTURE (Saiful - original Logic)
     // Trigger camera for Major Alerts (Impact or Loud Noise)
     if (reason.contains("IMPACT") || reason.contains("LOUD NOISE")) {
       debugPrint("Major Alert Detected: Capturing Evidence...");
@@ -195,6 +221,16 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.lock_person),
+              tooltip: 'Secure Gallery',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (context) => const SecureGalleryAuthScreen()),
+                );
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.tune), // Calibration Icon
               tooltip: 'Hardware Calibration',
               onPressed: () {
@@ -213,6 +249,29 @@ class _HomePageState extends State<HomePage> {
                       builder: (context) => const LogViewerScreen()),
                 );
               },
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (String result) {
+                if (result == 'contacts') {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => const EmergencyContactsScreen()));
+                } else if (result == 'triggers') {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) =>
+                          const TriggerCustomizationScreen()));
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'contacts',
+                  child: Text('Emergency Contacts'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'triggers',
+                  child: Text('Customize Triggers'),
+                ),
+              ],
             ),
           ],
         ),

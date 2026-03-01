@@ -14,8 +14,9 @@ class PermissionScreen extends StatefulWidget {
 class _PermissionScreenState extends State<PermissionScreen> {
   bool _micGranted = false;
   bool _cameraGranted = false;
-  bool _storageGranted =
-      false; // Using generic storage state, modern Android uses media scopes or doesn't need explicit runtime for public downloads if not heavily managed
+  bool _storageGranted = false;
+  bool _locationGranted = false;
+  bool _smsGranted = false;
 
   @override
   void initState() {
@@ -26,10 +27,11 @@ class _PermissionScreenState extends State<PermissionScreen> {
   Future<void> _checkPermissions() async {
     _micGranted = await Permission.microphone.isGranted;
     _cameraGranted = await Permission.camera.isGranted;
-    // For simple checking, we will assume true if we reach here and it's not strictly required on newer Androids,
-    // but let's query the specific ones the app uses extensively.
     _storageGranted =
         await Permission.storage.isGranted || await Permission.photos.isGranted;
+    _locationGranted = await Permission.locationAlways.isGranted ||
+        await Permission.locationWhenInUse.isGranted;
+    _smsGranted = await Permission.sms.isGranted;
     setState(() {});
   }
 
@@ -38,14 +40,27 @@ class _PermissionScreenState extends State<PermissionScreen> {
       Permission.microphone,
       Permission.camera,
       Permission.storage, // General placeholder
+      Permission.location,
+      Permission.sms,
     ].request();
 
-    setState(() {
-      _micGranted = statuses[Permission.microphone] == PermissionStatus.granted;
-      _cameraGranted = statuses[Permission.camera] == PermissionStatus.granted;
+    // Also explicitly request background location since we need it when app is in background
+    if (statuses[Permission.location] == PermissionStatus.granted) {
+      await Permission.locationAlways.request();
+    }
 
+    bool micStatus = await Permission.microphone.isGranted;
+    bool camStatus = await Permission.camera.isGranted;
+    bool locStatus = await Permission.locationAlways.isGranted ||
+        await Permission.locationWhenInUse.isGranted;
+    bool smsStatus = await Permission.sms.isGranted;
+
+    setState(() {
+      _micGranted = micStatus;
+      _cameraGranted = camStatus;
+      _locationGranted = locStatus;
+      _smsGranted = smsStatus;
       // We don't mandate storage to be true because Android 13+ behaves differently with images vs files.
-      // As long as they requested it, we move on.
     });
 
     _completeOnboarding();
@@ -128,6 +143,20 @@ class _PermissionScreenState extends State<PermissionScreen> {
                         'Required to safely store data logs and photos on your own device.',
                     isGranted:
                         _storageGranted, // May show false on Android 13+ but that's okay
+                  ),
+                  _buildPermissionItem(
+                    icon: Icons.location_on,
+                    title: 'Background Location',
+                    description:
+                        'Required to automatically attach your precise location to emergency SMS alerts even when the app is closed.',
+                    isGranted: _locationGranted,
+                  ),
+                  _buildPermissionItem(
+                    icon: Icons.sms,
+                    title: 'Send SMS messages',
+                    description:
+                        'Required to autonomously dispatch offline text messages to your emergency contacts when triggered.',
+                    isGranted: _smsGranted,
                   ),
                   const SizedBox(height: 40),
                   SizedBox(
